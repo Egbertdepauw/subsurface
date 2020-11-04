@@ -28,6 +28,13 @@ enum class StatsOperation : int {
 	Sum
 };
 
+// For median and quartiles.
+struct StatsQuartiles {
+	double min;
+	double q1, q2, q3;
+	double max;
+};
+
 struct StatsBin {
 	virtual ~StatsBin();
 	virtual bool operator<(StatsBin &) const = 0;
@@ -91,7 +98,8 @@ struct StatsType {
 	static QString operationName(StatsOperation);
 	double average(const std::vector<dive *> &dives) const;
 	double averageTimeWeighted(const std::vector<dive *> &dives) const;
-	double median(const std::vector<dive *> &dives) const;
+	StatsQuartiles quartiles(const std::vector<dive *> &dives) const;
+	std::vector<double> values(const std::vector<dive *> &dives) const;
 	double sum(const std::vector<dive *> &dives) const;
 	double applyOperation(const std::vector<dive *> &dives, StatsOperation op) const;
 private:
