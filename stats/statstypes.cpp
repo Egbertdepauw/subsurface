@@ -15,6 +15,10 @@
 
 static const constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
 
+// Typedefs for year / quarter or month binners
+using year_quarter = std::pair<unsigned short, unsigned short>;
+using year_month = std::pair<unsigned short, unsigned short>;
+
 // Note: usually I dislike functions defined inside class/struct
 // declarations ("Java style"). However, for brevity this is done
 // in this rather template-heavy source file more or less consistently.
@@ -22,7 +26,6 @@ static const constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
 // Templates to define invalid values for types and test for said values.
 // This is used by the binners: returning such a value means "ignore this dive".
 template<typename T> T invalid_value();
-template<typename T> bool is_invalid_value(const T &);
 template<> int invalid_value<int>()
 {
 	return std::numeric_limits<int>::max();
@@ -35,17 +38,26 @@ template<> QString invalid_value<QString>()
 {
 	return QString();
 }
-template<> bool is_invalid_value<int>(const int &i)
+
+static bool is_invalid_value(int i)
 {
 	return i == std::numeric_limits<int>::max();
 }
-template<> bool is_invalid_value<double>(const double &d)
+
+static bool is_invalid_value(double d)
 {
 	return std::isnan(d);
 }
-template<> bool is_invalid_value<QString>(const QString &s)
+
+static bool is_invalid_value(const QString &s)
 {
 	return s.isEmpty();
+}
+
+// Currently, we don't support invalid dates - should we?
+static bool is_invalid_value(const year_quarter &)
+{
+	return false;
 }
 
 // First, let's define the virtual destructors of our base classes
@@ -614,13 +626,6 @@ struct DateYearBinner : public IntBinner<DateYearBinner, DateYearBin> {
 	}
 };
 
-using year_quarter = std::pair<unsigned short, unsigned short>;
-// Currently, we don't support invalid dates - should we?
-template<> bool is_invalid_value<year_quarter>(const year_quarter &)
-{
-	return false;
-}
-
 struct DateQuarterBin : public SimpleBin<year_quarter> {
 	using SimpleBin::SimpleBin;
 };
@@ -664,7 +669,6 @@ struct DateQuarterBinner : public SimpleContinuousBinner<DateQuarterBinner, Date
 	}
 };
 
-using year_month = std::pair<unsigned short, unsigned short>;
 struct DateMonthBin : public SimpleBin<year_month> {
 	using SimpleBin::SimpleBin;
 };
