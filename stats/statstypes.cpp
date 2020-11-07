@@ -202,6 +202,20 @@ double StatsType::averageTimeWeighted(const std::vector<dive *> &dives) const
 	return weight_count > 0.0 ? sum / weight_count : 0.0;
 }
 
+std::vector<double> StatsType::values(const std::vector<dive *> &dives) const
+{
+	std::vector<double> vec;
+	vec.reserve(dives.size());
+	for (const dive *d: dives) {
+		double v = toFloat(d);
+		if (is_invalid_value(v))
+			continue;
+		vec.push_back(v);
+	}
+	std::sort(vec.begin(), vec.end());
+	return vec;
+}
+
 // Small helper to calculate quartiles - section of intervals of
 // two consecutive elements in a vector. It's not strictly correct
 // to interpolate linearly. However, on the one hand we don't know
@@ -218,20 +232,6 @@ static double q2(const double *v)
 static double q3(const double *v)
 {
 	return (v[0] + 3.0*v[1]) / 4.0;
-}
-
-std::vector<double> StatsType::values(const std::vector<dive *> &dives) const
-{
-	std::vector<double> vec;
-	vec.reserve(dives.size());
-	for (const dive *d: dives) {
-		double v = toFloat(d);
-		if (is_invalid_value(v))
-			continue;
-		vec.push_back(v);
-	}
-	std::sort(vec.begin(), vec.end());
-	return vec;
 }
 
 StatsQuartiles StatsType::quartiles(const std::vector<dive *> &dives) const
