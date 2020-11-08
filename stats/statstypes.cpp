@@ -7,6 +7,7 @@
 #include "core/qthelper.h" // for get_depth_unit() et al.
 #include "core/subsurface-time.h"
 #include <limits>
+#include <QLocale>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 #define SKIP_EMPTY Qt::SkipEmptyParts
@@ -529,8 +530,9 @@ struct IntRangeBinner : public IntBinner<Binner, Bin> {
 	}
 	QString format(const StatsBin &bin) const override {
 		int value = IntBinner<Binner, Bin>::derived_bin(bin).value;
-		return StatsTranslations::tr("%1–%2").arg(QString::number(value * bin_size),
-							  QString::number((value + 1) * bin_size));
+		QLocale loc;
+		return StatsTranslations::tr("%1–%2").arg(loc.toString(value * bin_size),
+							  loc.toString((value + 1) * bin_size));
 	}
 	QString formatLowerBound(const StatsBin &bin) const override {
 		int value = IntBinner<Binner, Bin>::derived_bin(bin).value;
@@ -745,7 +747,8 @@ struct MeterBin : public SimpleBin<int> {
 struct MeterBinner : public IntRangeBinner<MeterBinner, MeterBin> {
 	using IntRangeBinner::IntRangeBinner;
 	QString name() const override {
-		return StatsTranslations::tr("in %1 %2 steps").arg(QString::number(bin_size),
+		QLocale loc;
+		return StatsTranslations::tr("in %1 %2 steps").arg(loc.toString(bin_size),
 								   get_depth_unit());
 	}
 	QString unitSymbol() const override {
@@ -763,7 +766,8 @@ struct FeetBin : public SimpleBin<int> {
 struct FeetBinner : public IntRangeBinner<FeetBinner, FeetBin> {
 	using IntRangeBinner::IntRangeBinner;
 	QString name() const override {
-		return StatsTranslations::tr("in %1 %2 steps").arg(QString::number(bin_size),
+		QLocale loc;
+		return StatsTranslations::tr("in %1 %2 steps").arg(loc.toString(bin_size),
 								   get_depth_unit());
 	}
 	QString unitSymbol() const override {
@@ -879,7 +883,8 @@ struct MetricSACBin : public SimpleBin<int> {
 struct MetricSACBinner : public IntRangeBinner<MetricSACBinner, MetricSACBin> {
 	using IntRangeBinner::IntRangeBinner;
 	QString name() const override {
-		return StatsTranslations::tr("in %1 %2/min steps").arg(QString::number(bin_size),
+		QLocale loc;
+		return StatsTranslations::tr("in %1 %2/min steps").arg(loc.toString(bin_size),
 								       get_volume_unit());
 	}
 	QString unitSymbol() const override {
@@ -905,13 +910,15 @@ struct ImperialSACBinner : public IntBinner<ImperialSACBinner, ImperialSACBin> {
 	{
 	}
 	QString name() const override {
-		return StatsTranslations::tr("in %1 %2/min steps").arg(QString::number(bin_size / 100.0, 'f', 2),
+		QLocale loc;
+		return StatsTranslations::tr("in %1 %2/min steps").arg(loc.toString(bin_size / 100.0, 'f', 2),
 								       get_volume_unit());
 	}
 	QString format(const StatsBin &bin) const override {
 		int value = derived_bin(bin).value;
-		return StatsTranslations::tr("%1–%2").arg(QString::number((value * bin_size) / 100.0, 'f', 2),
-							  QString::number(((value + 1) * bin_size) / 100.0, 'f', 2));
+		QLocale loc;
+		return StatsTranslations::tr("%1–%2").arg(loc.toString((value * bin_size) / 100.0, 'f', 2),
+							  loc.toString(((value + 1) * bin_size) / 100.0, 'f', 2));
 	}
 	QString unitSymbol() const override {
 		return get_volume_unit() + StatsTranslations::tr("/min");
