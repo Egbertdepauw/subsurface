@@ -98,6 +98,7 @@ struct StatsType {
 	static QString operationName(StatsOperation);
 	double average(const std::vector<dive *> &dives) const;
 	double averageTimeWeighted(const std::vector<dive *> &dives) const;
+	static StatsQuartiles quartiles(const std::vector<double> &values);
 	StatsQuartiles quartiles(const std::vector<dive *> &dives) const;
 	std::vector<double> values(const std::vector<dive *> &dives) const;
 	double sum(const std::vector<dive *> &dives) const;

@@ -248,7 +248,12 @@ static double q3(const double *v)
 
 StatsQuartiles StatsType::quartiles(const std::vector<dive *> &dives) const
 {
-	std::vector<double> vec = values(dives);
+	return quartiles(values(dives));
+}
+
+// This expects the value vector to be sorted!
+StatsQuartiles StatsType::quartiles(const std::vector<double> &vec)
+{
 	size_t s = vec.size();
 	if (s == 0)
 		return { 0.0, 0.0, 0.0, 0.0, 0.0 };
