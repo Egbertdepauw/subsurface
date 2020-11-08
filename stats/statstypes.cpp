@@ -2,6 +2,7 @@
 #include "statstypes.h"
 #include "core/dive.h"
 #include "core/divemode.h"
+#include "core/divesite.h"
 #include "core/pref.h"
 #include "core/qthelper.h" // for get_depth_unit() et al.
 #include "core/subsurface-time.h"
@@ -58,6 +59,11 @@ static bool is_invalid_value(const QString &s)
 static bool is_invalid_value(const year_quarter &)
 {
 	return false;
+}
+
+static bool is_invalid_value(const dive_site *d)
+{
+	return !d;
 }
 
 // First, let's define the virtual destructors of our base classes
@@ -1010,14 +1016,62 @@ struct BuddyType : public StatsTypeTemplate<StatsType::Type::Discrete> {
 	}
 };
 
+// ============ Suit  ============
+struct SuitBin : public StringBin {
+	using StringBin::StringBin;
+};
+
+struct SuitBinner : public StringBinner<SuitBinner, SuitBin> {
+	std::vector<QString> to_string_list(const dive *d) const {
+		return { QString(d->suit) };
+	}
+};
+
+static SuitBinner suit_binner;
+struct SuitType : public StatsTypeTemplate<StatsType::Type::Discrete> {
+	QString name() const override {
+		return StatsTranslations::tr("Suit type");
+	}
+	std::vector<const StatsBinner *> binners() const override {
+		return { &suit_binner };
+	}
+};
+
+// ============ Location (including trip location)  ============
+struct LocationBin : public SimpleBin<const dive_site *> {
+	using SimpleBin::SimpleBin;
+};
+
+struct LocationBinner : public SimpleBinner<LocationBinner, LocationBin> {
+	QString format(const StatsBin &bin) const override {
+		const dive_site *ds = derived_bin(bin).value;
+		return QString(ds ? ds->name : "-");
+	}
+	const dive_site *to_bin_value(const dive *d) const {
+		return d->dive_site;
+	}
+};
+
+static LocationBinner location_binner;
+struct LocationType : public StatsTypeTemplate<StatsType::Type::Discrete> {
+	QString name() const override {
+		return StatsTranslations::tr("Dive site");
+	}
+	std::vector<const StatsBinner *> binners() const override {
+		return { &location_binner };
+	}
+};
+
 static DateType date_type;
 static DepthType depth_type;
 static DurationType duration_type;
 static SACType sac_type;
 static DiveModeType dive_mode_type;
 static BuddyType buddy_type;
+static SuitType suit_type;
+static LocationType location_type;
 const std::vector<const StatsType *> stats_types = {
-	&date_type, &depth_type, &duration_type, &sac_type, &dive_mode_type, &buddy_type
+	&date_type, &depth_type, &duration_type, &sac_type, &dive_mode_type, &buddy_type, &suit_type, &location_type
 };
 
 const std::vector<const StatsType *> stats_continuous_types = {
