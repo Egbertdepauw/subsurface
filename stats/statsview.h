@@ -84,7 +84,7 @@ private:
 	QtCharts::QCategoryAxis *createHistogramAxis(const StatsBinner &binner,
 						     const std::vector<T> &bins,
 						     bool isHorizontal);
-	QtCharts::QValueAxis *createValueAxis(double min, double max, int decimals);
+	QtCharts::QValueAxis *createValueAxis(double min, double max, int decimals, bool isHorizontal);
 
 	// Helper functions to add feature to the chart
 	void addLineMarker(double pos, double low, double high, const QPen &pen,

@@ -577,14 +577,37 @@ static QString makeFormatString(int decimals)
 	return QStringLiteral("%.%1f").arg(decimals < 0 ? 0 : decimals);
 }
 
-QtCharts::QValueAxis *StatsView::createValueAxis(double min, double max, int decimals)
+QtCharts::QValueAxis *StatsView::createValueAxis(double min, double max, int decimals, bool isHorizontal)
 {
 	using QtCharts::QValueAxis;
 
+	// TODO: Let the acceptable number of ticks depend on the size of the graph and font.
+	int numTicks = isHorizontal ? 8 : 10;
+
 	QValueAxis *axis = makeAxis<QValueAxis>();
-	// TODO: round axis labels to "nice" numbers.
 	axis->setRange(min, max);
+
+	// Use full decimal increments:w
+	double height = max - min;
+	double inc = height / numTicks;
+	double digits = floor(log10(inc));
+	int digits_int = lrint(digits);
+	double digits_factor = pow(10.0, digits);
+	int inc_int = std::max((int)lrint(inc / digits_factor), 1);
+	// Do "nice" increments: 1, 2, 4, 5.
+	if (inc_int > 5)
+		inc_int = 5;
+	if (inc_int == 3)
+		inc_int = 2;
+	inc = inc_int * digits_factor;
+	if (-digits_int > decimals)
+		decimals = -digits_int;
+
 	axis->setLabelFormat(makeFormatString(decimals));
+	axis->setLabelFormat(makeFormatString(decimals));
+	axis->setTickInterval(inc);
+	axis->setTickAnchor(0.0);
+	axis->setTickType(QValueAxis::TicksDynamic);
 	return axis;
 }
 
@@ -617,16 +640,17 @@ void StatsView::plotValueChart(const std::vector<dive *> &dives,
 	QBarCategoryAxis *catAxis = createCategoryAxis(*categoryBinner, categoryBins);
 	catAxis->setTitleText(categoryType->nameWithUnit());
 
+	bool isHorizontal = subType == ChartSubType::Horizontal;
 	double maxValue = *std::max_element(values.begin(), values.end());
 	double chartHeight = maxValue * (1.0 + barTopSpace);
-	QValueAxis *valAxis = createValueAxis(0.0, chartHeight, valueType->decimals());
+	QValueAxis *valAxis = createValueAxis(0.0, chartHeight, valueType->decimals(), isHorizontal);
 	valAxis->setTitleText(valueType->nameWithUnit());
 
 	QAbstractBarSeries *series;
-	if (subType == ChartSubType::Vertical)
-		series = addSeries<QtCharts::QBarSeries>(valueType->name(), catAxis, valAxis);
-	else
+	if (isHorizontal)
 		series = addSeries<QtCharts::QHorizontalBarSeries>(valueType->name(), valAxis, catAxis);
+	else
+		series = addSeries<QtCharts::QBarSeries>(valueType->name(), catAxis, valAxis);
 	if (!series)
 		return;
 
@@ -769,7 +793,7 @@ void StatsView::plotDiscreteScatter(const std::vector<dive *> &dives,
 
 	double chartTop = maxValue * (1.0 + barTopSpace);
 	double chartBottom = minValue * (1.0 - barTopSpace);
-	QValueAxis *valAxis = createValueAxis(chartBottom, chartTop, valueType->decimals());
+	QValueAxis *valAxis = createValueAxis(chartBottom, chartTop, valueType->decimals(), false);
 	valAxis->setTitleText(valueType->nameWithUnit());
 
 	QScatterSeries *series = addSeries<QScatterSeries>(valueType->name(), catAxis, valAxis);
@@ -1009,7 +1033,7 @@ void StatsView::plotHistogramBarChart(const std::vector<dive *> &dives,
 	double maxValue = *std::max_element(values.begin(), values.end());
 
 	double chartHeight = maxValue * (1.0 + barTopSpace);
-	QValueAxis *valAxis = createValueAxis(0.0, chartHeight, valueType->decimals());
+	QValueAxis *valAxis = createValueAxis(0.0, chartHeight, valueType->decimals(), isHorizontal);
 	valAxis->setTitleText(valueType->nameWithUnit());
 
 	QAbstractAxis *xAxis = catAxis;
@@ -1072,12 +1096,12 @@ void StatsView::plotScatter(const std::vector<dive *> &dives, const StatsType *c
 	double maxX = points.back().first;
 	auto [minY, maxY] = getMinMaxValue(points);
 
-	QValueAxis *axisX = createValueAxis(minX, maxX, categoryType->decimals());
+	QValueAxis *axisX = createValueAxis(minX, maxX, categoryType->decimals(), true);
 	axisX->setTitleText(categoryType->nameWithUnit());
 
 	double chartTop = maxY * (1.0 + barTopSpace);
 	double chartBottom = minY * (1.0 - barTopSpace);
-	QValueAxis *axisY = createValueAxis(chartBottom, chartTop, valueType->decimals());
+	QValueAxis *axisY = createValueAxis(chartBottom, chartTop, valueType->decimals(), false);
 	axisY->setTitleText(valueType->nameWithUnit());
 
 	QScatterSeries *series = addSeries<QScatterSeries>(valueType->name(), axisX, axisY);
