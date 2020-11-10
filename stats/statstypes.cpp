@@ -341,11 +341,8 @@ struct SimpleBin : public StatsBin {
 		return value == dynamic_cast<SimpleBin &>(b).value;
 	}
 };
-
-// A string bin is s simple bin where the format is simply its value
-struct StringBin : public SimpleBin<QString> {
-	using SimpleBin::SimpleBin;
-};
+using IntBin = SimpleBin<int>;
+using StringBin = SimpleBin<QString>;
 
 // A general binner template that works on trivial bins that are based
 // on a type that is equality and less-than comparable. The derived class
@@ -635,11 +632,7 @@ double date_to_double(int year, int month, int day)
 	return t / 86400.0; // Turn seconds since 1970 to days since 1970, if that makes sense...?
 }
 
-struct DateYearBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
-
-struct DateYearBinner : public IntBinner<DateYearBinner, DateYearBin> {
+struct DateYearBinner : public IntBinner<DateYearBinner, IntBin> {
 	QString name() const override {
 		return StatsTranslations::tr("Yearly");
 	}
@@ -654,9 +647,7 @@ struct DateYearBinner : public IntBinner<DateYearBinner, DateYearBin> {
 	}
 };
 
-struct DateQuarterBin : public SimpleBin<year_quarter> {
-	using SimpleBin::SimpleBin;
-};
+using DateQuarterBin = SimpleBin<year_quarter>;
 
 struct DateQuarterBinner : public SimpleContinuousBinner<DateQuarterBinner, DateQuarterBin> {
 	QString name() const override {
@@ -697,9 +688,7 @@ struct DateQuarterBinner : public SimpleContinuousBinner<DateQuarterBinner, Date
 	}
 };
 
-struct DateMonthBin : public SimpleBin<year_month> {
-	using SimpleBin::SimpleBin;
-};
+using DateMonthBin = SimpleBin<year_month>;
 
 struct DateMonthBinner : public SimpleContinuousBinner<DateMonthBinner, DateMonthBin> {
 	QString name() const override {
@@ -740,11 +729,7 @@ struct DateType : public StatsTypeTemplate<StatsType::Type::Discrete> {
 
 // ============ Dive depth, binned in 5, 10, 20 m or 15, 30, 60 ft bins ============
 
-struct MeterBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
-
-struct MeterBinner : public IntRangeBinner<MeterBinner, MeterBin> {
+struct MeterBinner : public IntRangeBinner<MeterBinner, IntBin> {
 	using IntRangeBinner::IntRangeBinner;
 	QString name() const override {
 		QLocale loc;
@@ -759,11 +744,7 @@ struct MeterBinner : public IntRangeBinner<MeterBinner, MeterBin> {
 	}
 };
 
-struct FeetBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
-
-struct FeetBinner : public IntRangeBinner<FeetBinner, FeetBin> {
+struct FeetBinner : public IntRangeBinner<FeetBinner, IntBin> {
 	using IntRangeBinner::IntRangeBinner;
 	QString name() const override {
 		QLocale loc;
@@ -810,11 +791,8 @@ struct DepthType : public StatsTypeTemplate<StatsType::Type::Numeric> {
 };
 
 // ============ Bottom time, binned in 5, 10, 30 min or 1 h bins ============
-struct MinuteBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
 
-struct MinuteBinner : public IntRangeBinner<MinuteBinner, MinuteBin> {
+struct MinuteBinner : public IntRangeBinner<MinuteBinner, IntBin> {
 	using IntRangeBinner::IntRangeBinner;
 	QString name() const override {
 		return StatsTranslations::tr("in %1 min steps").arg(bin_size);
@@ -827,11 +805,7 @@ struct MinuteBinner : public IntRangeBinner<MinuteBinner, MinuteBin> {
 	}
 };
 
-struct HourBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
-
-struct HourBinner : public IntBinner<HourBinner, HourBin> {
+struct HourBinner : public IntBinner<HourBinner, IntBin> {
 	QString name() const override {
 		return StatsTranslations::tr("in hours");
 	}
@@ -876,11 +850,7 @@ struct DurationType : public StatsTypeTemplate<StatsType::Type::Numeric> {
 
 // ============ SAC, binned in 2, 5, 10 l/min or 0.1, 0.2, 0.4, 0.8 cuft/min bins ============
 
-struct MetricSACBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
-
-struct MetricSACBinner : public IntRangeBinner<MetricSACBinner, MetricSACBin> {
+struct MetricSACBinner : public IntRangeBinner<MetricSACBinner, IntBin> {
 	using IntRangeBinner::IntRangeBinner;
 	QString name() const override {
 		QLocale loc;
@@ -899,11 +869,8 @@ struct MetricSACBinner : public IntRangeBinner<MetricSACBinner, MetricSACBin> {
 
 // "Imperial" SACs are annoying, since we have to bin to sub-integer precision.
 // We store cuft * 100 as an integer, to avoid troubles with floating point semantics.
-struct ImperialSACBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
 
-struct ImperialSACBinner : public IntBinner<ImperialSACBinner, ImperialSACBin> {
+struct ImperialSACBinner : public IntBinner<ImperialSACBinner, IntBin> {
 	int bin_size;
 	ImperialSACBinner(double size)
 		: bin_size(lrint(size * 100.0))
@@ -973,11 +940,8 @@ struct SACType : public StatsTypeTemplate<StatsType::Type::Numeric> {
 };
 
 // ============ Dive mode ============
-struct DiveModeBin : public SimpleBin<int> {
-	using SimpleBin::SimpleBin;
-};
 
-struct DiveModeBinner : public SimpleBinner<DiveModeBinner, DiveModeBin> {
+struct DiveModeBinner : public SimpleBinner<DiveModeBinner, IntBin> {
 	QString format(const StatsBin &bin) const override {
 		return QString(divemode_text_ui[derived_bin(bin).value]);
 	}
@@ -998,11 +962,8 @@ struct DiveModeType : public StatsTypeTemplate<StatsType::Type::Discrete> {
 };
 
 // ============ Buddy (including dive guides) ============
-struct BuddyBin : public StringBin {
-	using StringBin::StringBin;
-};
 
-struct BuddyBinner : public StringBinner<BuddyBinner, BuddyBin> {
+struct BuddyBinner : public StringBinner<BuddyBinner, StringBin> {
 	std::vector<QString> to_string_list(const dive *d) const {
 		std::vector<QString> dive_people;
 		for (const QString &s: QString(d->buddy).split(",", SKIP_EMPTY))
@@ -1024,11 +985,8 @@ struct BuddyType : public StatsTypeTemplate<StatsType::Type::Discrete> {
 };
 
 // ============ Suit  ============
-struct SuitBin : public StringBin {
-	using StringBin::StringBin;
-};
 
-struct SuitBinner : public StringBinner<SuitBinner, SuitBin> {
+struct SuitBinner : public StringBinner<SuitBinner, StringBin> {
 	std::vector<QString> to_string_list(const dive *d) const {
 		return { QString(d->suit) };
 	}
@@ -1045,9 +1003,8 @@ struct SuitType : public StatsTypeTemplate<StatsType::Type::Discrete> {
 };
 
 // ============ Location (including trip location)  ============
-struct LocationBin : public SimpleBin<const dive_site *> {
-	using SimpleBin::SimpleBin;
-};
+
+using LocationBin = SimpleBin<const dive_site *>;
 
 struct LocationBinner : public SimpleBinner<LocationBinner, LocationBin> {
 	QString format(const StatsBin &bin) const override {
